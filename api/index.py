@@ -2,20 +2,25 @@ import json
 from pathlib import Path
 
 import numpy as np
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Request
+from fastapi.responses import Response
 
 app = FastAPI()
 
-# CORS: lets any website call your endpoint from a browser
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
-# Load the data once, from the file sitting next to this script
+# Add CORS headers to EVERY response, whether or not the request has an Origin
+@app.middleware("http")
+async def add_cors_headers(request: Request, call_next):
+    if request.method == "OPTIONS":
+        response = Response(status_code=200)
+    else:
+        response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
+
+
 DATA = json.loads((Path(__file__).parent / "q-vercel-latency.json").read_text())
 
 
@@ -39,5 +44,4 @@ def analyze(body: dict):
             "breaches": sum(1 for x in latencies if x > threshold),
         }
 
-    # Region results are available both at the top level and under "regions"
     return {**result, "regions": result}
