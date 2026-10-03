@@ -45,3 +45,7 @@ def analyze(body: dict):
         }
 
     return {**result, "regions": result}
+
+@app.options("/{path:path}")
+def preflight(path: str = ""):
+    return Response(status_code=200)
