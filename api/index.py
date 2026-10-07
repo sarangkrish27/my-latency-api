@@ -49,4 +49,4 @@ async def analyze(payload: dict):
             "avg_uptime": float(uptimes.mean()),
             "breaches": int((latencies > threshold).sum()),
         }
-    return result
+    return {"regions": result}
